@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Two Clocks</title>
+<style>
+:root{color-scheme:light dark;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f6fa;color:#1c2533}
+main{width:min(94vw,760px);background:white;border:1px solid #dce1eb;border-radius:22px;padding:24px;box-sizing:border-box;box-shadow:0 6px 28px #14203b12}
+h1{text-align:center;font-size:1.45rem;margin:0 0 8px}p{text-align:center;color:#5e6774;margin:7px 0 16px}.clocks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.panel{text-align:center;border:1px solid #dce1eb;border-radius:17px;padding:14px 7px;min-width:0}
+.face{position:relative;width:100%;max-width:255px;aspect-ratio:1;border:5px solid #253347;border-radius:50%;box-sizing:border-box;margin:15px auto;background:#fff;color:#1c2533}
+.num{position:absolute;transform:translate(-50%,-50%);font-weight:600;font-size:clamp(12px,2.7vw,20px)}
+.hand{position:absolute;bottom:50%;left:50%;transform-origin:bottom center;border-radius:5px}
+.hour{height:25%;width:5px;margin-left:-2.5px;background:#263347}.minute{height:35%;width:4px;margin-left:-2px;background:#263347}.second{height:40%;width:2px;margin-left:-1px;background:#e34b4b}
+.dot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;background:#e34b4b;border-radius:50%}
+.digital{font-size:clamp(15px,3vw,25px);font-weight:700;font-variant-numeric:tabular-nums}.label{font-weight:600}
+.controls{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:16px}
+button{font:inherit;border:1px solid #c4cddd;border-radius:11px;background:white;color:#1c2533;padding:10px 15px;cursor:pointer}button:hover{background:#f0f4fb}
+#offset-label{text-align:center;font-weight:600;margin-top:16px}
+@media(max-width:400px){main{padding:12px}.clocks{gap:8px}.panel{padding:12px 4px}.face{border-width:4px}}
+@media(prefers-color-scheme:dark){body{background:#10151e;color:#eaf0f8}main,.panel,button{background:#1a2230;color:#eaf0f8;border-color:#3a4658}.face{background:#1a2230;color:#eaf0f8;border-color:#eaf0f8}.hour,.minute{background:#eaf0f8}p{color:#bac3d0}button:hover{background:#29364a}}
+</style>
+</head>
+<body>
+<main>
+<h1>Live Two Clocks</h1>
+<p>Both clocks use your device’s current local time.</p>
+<div class="clocks">
+<section class="panel"><div class="label">Clock 1 · Live</div><div class="face" id="face-a"></div><div class="digital" id="time-a">--:--:--</div></section>
+<section class="panel"><div class="label">Clock 2 · Adjusted</div><div class="face" id="face-b"></div><div class="digital" id="time-b">--:--:--</div></section>
+</div>
+<div id="offset-label" aria-live="polite">Clock 2 is 27.5 seconds ahead</div>
+<div class="controls"><button id="minus">−0.5s</button><button id="reset">Reset to 26s</button><button id="plus">+0.5s</button></div>
+<p>Runs offline once downloaded. Clock accuracy depends on your device’s time settings.</p>
+</main>
+<script>
+(()=>{
+let offset=27500;
+const faces=[document.querySelector('#face-a'),document.querySelector('#face-b')];
+const displays=[document.querySelector('#time-a'),document.querySelector('#time-b')];
+faces.forEach(face=>{
+ for(let n=1;n<=12;n++){
+  const el=document.createElement('span');el.className='num';el.textContent=n;
+  const a=n*Math.PI/6;el.style.left=(50+41*Math.sin(a))+'%';el.style.top=(50-41*Math.cos(a))+'%';face.appendChild(el);
+ }
+ for(const name of ['hour','minute','second']){const el=document.createElement('div');el.className='hand '+name;face.appendChild(el)}
+ const dot=document.createElement('div');dot.className='dot';face.appendChild(dot);
+});
+function update(){
+ const now=Date.now();
+ [now,now+offset].forEach((time,i)=>{
+  const d=new Date(time),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),ms=d.getMilliseconds();
+  const angles={hour:((h%12)+m/60+s/3600)*30,minute:(m+s/60+ms/60000)*6,second:(s+ms/1000)*6};
+  for(const [name,a] of Object.entries(angles))faces[i].querySelector('.'+name).style.transform=`rotate(${a}deg)`;
+  displays[i].textContent=`${h%12||12}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+ });
+}
+function adjust(ms){offset+=ms;document.querySelector('#offset-label').textContent=`Clock 2 is ${(offset/1000).toFixed(1)} seconds ${offset>=0?'ahead':'behind'}`;update()}
+document.querySelector('#minus').addEventListener('click',()=>adjust(-500));
+document.querySelector('#plus').addEventListener('click',()=>adjust(500));
+document.querySelector('#reset').addEventListener('click',()=>adjust(26000-offset));
+update();setInterval(update,50);
+})();
+</script>
+</body>
+</html>
