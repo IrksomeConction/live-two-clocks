@@ -136,7 +136,7 @@ function drawRed(d){
  let x=30;
  for(const ch of str){
   if(ch===':'){for(const yy of [4,5,6,10,11,12])for(let xx=0;xx<3;xx++)dot(rc,x+xx*10.8,10+yy*10.1,'#f45c5e');x+=65;continue}
-  if(ch!==' ')digits[ch].forEach((row,y)=>{[...row].forEach((on,c)=>{if(on==='1')dot(rc,x+c*10.8,10+y*10.1,'#f45c5e')})});
+  if(ch!==' '){const lit=new Set();digits[ch].forEach((row,y)=>{[...row].forEach((on,c)=>{if(on==='1')for(const dx of [0,1])for(const dy of [0,1])lit.add((c+dx)+','+(y+dy))})});for(const cell of lit){const [c,y]=cell.split(',').map(Number);dot(rc,x+c*10.8,10+y*10.1,'#f45c5e')}}
   x+=133;
  }
  rc.strokeStyle='#646561';rc.lineWidth=2;rc.strokeRect(1,1,w-2,h-2);
