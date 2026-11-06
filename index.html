@@ -34,6 +34,10 @@ body{padding:24px 0}
 .schedule-table td:first-child{white-space:nowrap;font-weight:650;font-variant-numeric:tabular-nums;width:100px}
 .schedule-table tr:last-child td{border-bottom:0}
 @media(prefers-color-scheme:dark){.school-schedule,.day-card{border-color:#3a4658}.day-card{background:#222e40}.day-card small,.schedule-table th{color:#bac3d0}.schedule-table th,.schedule-table td{border-bottom-color:#3a4658}}
+
+main{width:min(96vw,940px)}
+.clocks{grid-template-columns:1fr;gap:22px}.panel{border:0;padding:0}.label{margin-bottom:9px;font-size:1rem}
+canvas{display:block;width:100%;height:auto;margin:auto}#red-clock{border-radius:6px;box-shadow:0 1px 2px #0005}#blue-clock{max-width:760px}
 </style>
 </head>
 <body>
@@ -41,8 +45,8 @@ body{padding:24px 0}
 <h1>Live Two Clocks</h1>
 <p>Both clocks use your device’s current local time.</p>
 <div class="clocks">
-<section class="panel"><div class="label">Your Time</div><div class="face" id="face-a"></div><div class="digital" id="time-a">--:--:--</div></section>
-<section class="panel"><div class="label">CPA time</div><div class="face" id="face-b"></div><div class="digital" id="time-b">--:--:--</div></section>
+<section class="panel"><div class="label">Your Time</div><canvas id="red-clock" width="972" height="172" role="img" aria-label="Your Time"></canvas></section>
+<section class="panel"><div class="label">CPA time</div><canvas id="blue-clock" width="612" height="160" role="img" aria-label="CPA time"></canvas></section>
 </div>
 <div id="offset-label" aria-live="polite">CPA time is 27.5 seconds ahead</div>
 <div class="controls"><button id="minus">−0.5s</button><button id="reset">Reset to 26s</button><button id="plus">+0.5s</button></div>
@@ -71,24 +75,51 @@ body{padding:24px 0}
 <script>
 (()=>{
 let offset=27500;
-const faces=[document.querySelector('#face-a'),document.querySelector('#face-b')];
-const displays=[document.querySelector('#time-a'),document.querySelector('#time-b')];
-faces.forEach(face=>{
- for(let n=1;n<=12;n++){
-  const el=document.createElement('span');el.className='num';el.textContent=n;
-  const a=n*Math.PI/6;el.style.left=(50+41*Math.sin(a))+'%';el.style.top=(50-41*Math.cos(a))+'%';face.appendChild(el);
+
+const red=document.querySelector('#red-clock'),blue=document.querySelector('#blue-clock');
+const rc=red.getContext('2d'),bc=blue.getContext('2d');
+const digits={
+'0':['000111000','001000100','010000010','010000010','100000001','100000001','100000001','100000001','100000001','100000001','100000001','010000010','010000010','001000100','000111000'],
+'1':['000110000','001110000','010110000','100110000','000110000','000110000','000110000','000110000','000110000','000110000','000110000','000110000','000110000','000110000','011111000'],
+'2':['001111000','010000100','100000010','000000001','000000001','000000001','000000010','000000100','000001000','000010000','000100000','001000000','010000000','100000000','111111111'],
+'3':['001111000','010000100','100000010','000000001','000000001','000000010','000111100','000000010','000000001','000000001','000000001','000000001','100000010','010000100','001111000'],
+'4':['000001100','000010100','000100100','000100100','001000100','010000100','010000100','100000100','111111111','000000100','000000100','000000100','000000100','000000100','000000100'],
+'5':['111111111','100000000','100000000','100000000','100000000','101111000','110000100','000000010','000000001','000000001','000000001','000000001','100000010','010000100','001111000'],
+'6':['000111100','001000010','010000000','100000000','100000000','101111000','110000100','100000010','100000001','100000001','100000001','100000001','010000010','001000100','000111000'],
+'7':['111111111','000000001','000000010','000000010','000000100','000000100','000001000','000001000','000010000','000010000','000100000','000100000','001000000','001000000','001000000'],
+'8':['000111000','001000100','010000010','010000010','010000010','001000100','000111000','001000100','010000010','100000001','100000001','100000001','010000010','001000100','000111000'],
+'9':['000111000','001000100','010000010','100000001','100000001','100000001','100000001','010000011','001111101','000000001','000000001','000000010','000000100','010001000','001110000']};
+function dot(ctx,x,y,color,r=4.1){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
+function drawRed(d){
+ const w=972,h=172;
+ let g=rc.createLinearGradient(0,0,w,h);g.addColorStop(0,'#4c4d4b');g.addColorStop(1,'#292b29');rc.fillStyle=g;rc.fillRect(0,0,w,h);
+ rc.fillStyle='#ffffff03';rc.fillRect(0,0,w,80);
+ for(let x=5;x<w;x+=10.8)for(let y=6;y<h;y+=10.1)dot(rc,x,y,'#ffffff06',3.8);
+ const str=String(d.getHours()%12||12).padStart(2,' ')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+ let x=30;
+ for(const ch of str){
+  if(ch===':'){for(const yy of [4,5,6,10,11,12])for(let xx=0;xx<3;xx++)dot(rc,x+xx*10.8,10+yy*10.1,'#f45c5e');x+=65;continue}
+  if(ch!==' ')digits[ch].forEach((row,y)=>{[...row].forEach((on,c)=>{if(on==='1')dot(rc,x+c*10.8,10+y*10.1,'#f45c5e')})});
+  x+=133;
  }
- for(const name of ['hour','minute','second']){const el=document.createElement('div');el.className='hand '+name;face.appendChild(el)}
- const dot=document.createElement('div');dot.className='dot';face.appendChild(dot);
-});
+ rc.strokeStyle='#646561';rc.lineWidth=2;rc.strokeRect(1,1,w-2,h-2);
+}
+function blueText(text,x,y,size,width){
+ bc.save();bc.font='300 '+size+'px Arial, Helvetica, sans-serif';bc.fillStyle='#fff';const measured=bc.measureText(text).width;bc.translate(x,y);bc.scale(width/measured,1);bc.fillText(text,0,0);bc.restore();
+}
+function drawBlue(d){
+ let g=bc.createLinearGradient(0,0,612,160);g.addColorStop(0,'#289bd0');g.addColorStop(.5,'#4a9bd0');g.addColorStop(1,'#318dcb');bc.fillStyle=g;bc.fillRect(0,0,612,160);
+ bc.fillStyle='#ffffff06';bc.beginPath();bc.moveTo(110,0);bc.lineTo(236,0);bc.lineTo(303,160);bc.lineTo(177,160);bc.closePath();bc.fill();
+ blueText((d.getHours()%12||12)+':'+String(d.getMinutes()).padStart(2,'0'),-5,145,186,391);
+ blueText(d.getHours()>=12?'PM':'AM',424,45,43,55);
+ blueText(String(d.getSeconds()).padStart(2,'0'),397,144,90,83);
+ const weekdays=['SUN','MON','TUE','WED','THU','FRI','SAT'],months=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+ blueText(weekdays[d.getDay()],511,45,43,86);blueText(months[d.getMonth()],509,96,44,90);blueText(String(d.getDate()),545,145,43,String(d.getDate()).length===1?23:46);
+ bc.strokeStyle='#00141e';bc.lineWidth=2.5;bc.strokeRect(1.25,1.25,609.5,157.5);bc.beginPath();bc.moveTo(497,0);bc.lineTo(497,160);bc.moveTo(497,53);bc.lineTo(612,53);bc.moveTo(497,106);bc.lineTo(612,106);bc.stroke();
+}
 function update(){
- const now=Date.now();
- [now,now+offset].forEach((time,i)=>{
-  const d=new Date(time),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),ms=d.getMilliseconds();
-  const angles={hour:((h%12)+m/60+s/3600)*30,minute:(m+s/60+ms/60000)*6,second:(s+ms/1000)*6};
-  for(const [name,a] of Object.entries(angles))faces[i].querySelector('.'+name).style.transform=`rotate(${a}deg)`;
-  displays[i].textContent=`${h%12||12}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
- });
+ const now=Date.now(),local=new Date(now),cpa=new Date(now+offset);drawRed(local);drawBlue(cpa);
+ red.setAttribute('aria-label','Your Time: '+local.toLocaleTimeString());blue.setAttribute('aria-label','CPA time: '+cpa.toLocaleString());
 }
 function adjust(ms){offset+=ms;document.querySelector('#offset-label').textContent=`CPA time is ${(offset/1000).toFixed(1)} seconds ${offset>=0?'ahead':'behind'}`;update()}
 document.querySelector('#minus').addEventListener('click',()=>adjust(-500));
@@ -105,7 +136,7 @@ function updateSchoolDays(){
  }
 }
 updateSchoolDays();setInterval(updateSchoolDays,1000);
-update();setInterval(update,50);
+update();setInterval(update,100);
 })();
 </script>
 </body>
