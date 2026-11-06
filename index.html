@@ -38,6 +38,27 @@ body{padding:24px 0}
 main{width:min(96vw,940px)}
 .clocks{grid-template-columns:1fr;gap:22px}.panel{border:0;padding:0}.label{margin-bottom:9px;font-size:1rem}
 canvas{display:block;width:100%;height:auto;margin:auto}#red-clock{border-radius:6px;box-shadow:0 1px 2px #0005}#blue-clock{max-width:760px}
+
+.year-calendar{border-top:1px solid #dce1eb;padding-top:24px;margin-top:24px}
+.year-calendar h2{text-align:center;margin:0 0 6px;font-size:1.3rem}.calendar-intro{font-size:.88rem;margin-bottom:20px}
+.countdown-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.countdown-card{border:1px solid #c8dceb;background:#eff7ff;border-radius:16px;padding:18px;min-width:0}
+.countdown-card h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:#47627c;margin:0 0 10px}
+.countdown-card strong{display:block;font-size:clamp(1.15rem,3.8vw,1.75rem);font-variant-numeric:tabular-nums;margin-bottom:8px}
+.countdown-card .event-name{font-weight:650;font-size:.96rem;display:block}.countdown-card small{display:block;margin-top:5px;color:#5e6774}
+#current-events{font-size:.9rem;color:#5e6774;margin:12px 0 20px}
+.calendar-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:20px 0 14px}
+.calendar-toolbar label{font-weight:650}.calendar-toolbar select{font:inherit;max-width:100%;padding:9px;background:transparent;color:inherit;border:1px solid #aebdce;border-radius:9px}.calendar-nav{display:flex;gap:6px}.calendar-nav button{padding:8px 12px}button:disabled{opacity:.4;cursor:default}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.weekday{text-align:center;font-size:.75rem;color:#5e6774;padding:5px 0 9px}
+.calendar-day{border:1px solid #dce1eb;border-radius:10px;min-height:72px;padding:8px 5px;display:flex;flex-direction:column;gap:7px;align-items:center;justify-content:flex-start;font-size:.95rem;background:transparent;color:inherit}
+.calendar-day.today{border:2px solid #318dcb}.calendar-day.selected{background:#e6f2ff;outline:2px solid #318dcb;outline-offset:1px}.calendar-day.has-event{font-weight:700}
+.event-dots{display:flex;gap:3px;flex-wrap:wrap;justify-content:center}.event-dot{height:6px;width:6px;border-radius:50%;background:var(--event-color)}
+.calendar-legend{display:flex;gap:10px 16px;flex-wrap:wrap;margin:15px 0 20px;font-size:.75rem;color:#5e6774}.calendar-legend span{display:flex;align-items:center;gap:5px}
+.selected-date{border:1px solid #dce1eb;border-radius:12px;padding:16px;margin:18px 0}.selected-date h3{font-size:1rem;margin:0 0 10px}.selected-date p{font-size:.9rem;text-align:left;margin:6px 0}
+.month-agenda h3{font-size:1.05rem;margin:20px 0 12px}.agenda-event{border-left:3px solid var(--event-color);padding:10px 13px;margin:10px 0;background:#f4f6fa;border-radius:0 9px 9px 0}.agenda-event time{font-size:.8rem;color:#5e6774;display:block;margin-bottom:5px}.agenda-event strong{font-size:.95rem}.agenda-event p{font-size:.85rem;text-align:left;margin:5px 0}.event-kind{font-size:.7rem;text-transform:uppercase;letter-spacing:.03em;color:#5e6774;margin-left:8px}
+.calendar-notes{font-size:.78rem;color:#5e6774;line-height:1.6;border-top:1px solid #dce1eb;padding-top:14px;margin-top:20px}.calendar-notes p{font-size:inherit;text-align:left;margin:5px 0}
+@media(max-width:480px){.countdown-grid{grid-template-columns:1fr}.calendar-day{min-height:54px}.calendar-grid{gap:3px}.calendar-nav button{padding:8px 10px}.countdown-card{padding:14px}}
+@media(prefers-color-scheme:dark){.year-calendar,.calendar-day,.selected-date,.calendar-notes{border-color:#3a4658}.countdown-card{background:#172d40;border-color:#345069}.countdown-card h3{color:#9fc8e8}.calendar-day.selected{background:#204b6c}.agenda-event{background:#222e40}.calendar-legend,.weekday,#current-events,.calendar-notes,.countdown-card small,.agenda-event time,.event-kind{color:#bac3d0}.calendar-toolbar select{background:#1a2230}}
 </style>
 </head>
 <body>
@@ -70,6 +91,22 @@ canvas{display:block;width:100%;height:auto;margin:auto}#red-clock{border-radius
 <tr><td>1:19 PM</td><td>Period 3 ends</td></tr>
 <tr><td>2:50 PM</td><td>Period 4 ends · End of school day</td></tr>
 </tbody></table>
+</section>
+
+<section class="year-calendar" aria-labelledby="calendar-heading">
+<h2 id="calendar-heading">2026–2027 School Calendar</h2>
+<p class="calendar-intro">Prince George’s County Public Schools · July 2026–June 2027</p>
+<div class="countdown-grid">
+<div class="countdown-card"><h3>Next special day</h3><strong id="special-countdown">Loading…</strong><span class="event-name" id="special-name"></span><small id="special-date"></small></div>
+<div class="countdown-card"><h3 id="break-heading">Next break</h3><strong id="break-countdown">Loading…</strong><span class="event-name" id="break-name"></span><small id="break-date"></small></div>
+</div>
+<div id="current-events"></div>
+<div class="calendar-toolbar"><label for="calendar-month">Month <select id="calendar-month" aria-label="Month"></select></label><div class="calendar-nav"><button id="calendar-prev" aria-label="Previous month">←</button><button id="calendar-today">Today</button><button id="calendar-next" aria-label="Next month">→</button></div></div>
+<div class="calendar-grid" id="calendar-grid" aria-label="Month calendar"></div>
+<div class="calendar-legend" id="calendar-legend"></div>
+<div class="selected-date" id="selected-date" aria-live="polite"></div>
+<div class="month-agenda" id="month-agenda"></div>
+<div class="calendar-notes"><p>Countdowns use CPA time and count to midnight at the start of the listed date. Breaks mean the named Thanksgiving, winter/Christmas, and spring breaks.</p><p>Religious observances do not imply a school closure unless marked closed; some begin at sunset the previous day. Early-dismissal times are not provided in this calendar.</p><p>Possible weather make-up days: April 19, June 16, and June 17, 2027. Last student and teacher days may change. A/B days continue alternating every calendar day, as configured.</p><p>Source: district school calendar, approved January 22, 2026; updated July 16, 2026.</p></div>
 </section>
 </main>
 <script>
@@ -137,6 +174,63 @@ function updateSchoolDays(){
 }
 updateSchoolDays();setInterval(updateSchoolDays,1000);
 update();setInterval(update,100);
+
+const schoolEvents=[{"start": "2026-07-03", "end": "2026-07-03", "title": "Independence Day observed", "kind": "closed", "note": "Schools and offices closed."}, {"start": "2026-08-11", "end": "2026-08-13", "title": "New teacher professional duty days", "kind": "staff", "note": "Professional duty days for new teachers."}, {"start": "2026-08-17", "end": "2026-08-21", "title": "All teacher professional duty days", "kind": "staff", "note": "Professional duty days for all teachers."}, {"start": "2026-08-24", "end": "2026-08-24", "title": "Student orientation day", "kind": "academic", "note": "Also a professional duty day for all teachers."}, {"start": "2026-08-25", "end": "2026-08-25", "title": "First day of school", "kind": "academic", "note": "First day for all students."}, {"start": "2026-09-07", "end": "2026-09-07", "title": "Labor Day", "kind": "closed", "note": "Schools and offices closed."}, {"start": "2026-09-12", "end": "2026-09-12", "title": "Rosh Hashanah", "kind": "holiday", "note": "Religious observance noted for planning; not listed as a school closure."}, {"start": "2026-09-16", "end": "2026-09-16", "title": "Professional development", "kind": "closed", "note": "Schools closed for students."}, {"start": "2026-09-21", "end": "2026-09-21", "title": "Yom Kippur", "kind": "closed", "note": "Schools and offices closed. Religious observance."}, {"start": "2026-10-02", "end": "2026-10-02", "title": "Early dismissal", "kind": "early", "note": "Teacher professional half-day. Dismissal time is not specified in this calendar."}, {"start": "2026-10-16", "end": "2026-10-16", "title": "Professional development", "kind": "closed", "note": "Schools closed for students."}, {"start": "2026-10-30", "end": "2026-10-30", "title": "End of first quarter", "kind": "academic", "note": "45 student days."}, {"start": "2026-10-30", "end": "2026-10-30", "title": "Early dismissal", "kind": "early", "note": "Q1 grading and reporting half-day for teachers."}, {"start": "2026-11-03", "end": "2026-11-03", "title": "Election Day", "kind": "closed", "note": "Schools and offices closed."}, {"start": "2026-11-06", "end": "2026-11-10", "title": "Diwali", "kind": "holiday", "note": "Religious observance noted for planning; not listed as a school closure."}, {"start": "2026-11-11", "end": "2026-11-11", "title": "Parent-teacher conferences", "kind": "closed", "note": "Schools closed for students."}, {"start": "2026-11-25", "end": "2026-11-27", "title": "Thanksgiving break", "kind": "break", "note": "Schools and offices closed."}, {"start": "2026-12-11", "end": "2026-12-11", "title": "Early dismissal", "kind": "early", "note": "Teacher professional half-day. Dismissal time is not specified in this calendar."}, {"start": "2026-12-21", "end": "2026-12-31", "title": "Winter and Christmas break", "kind": "break", "note": "Schools and offices closed. January 1 is also closed for New Year’s Day."}, {"start": "2027-01-01", "end": "2027-01-01", "title": "New Year’s Day", "kind": "closed", "note": "Schools and offices closed."}, {"start": "2027-01-18", "end": "2027-01-18", "title": "Martin Luther King Jr. Day", "kind": "closed", "note": "Schools and offices closed."}, {"start": "2027-01-22", "end": "2027-01-22", "title": "End of second quarter", "kind": "academic", "note": "44 student days."}, {"start": "2027-01-22", "end": "2027-01-22", "title": "Early dismissal", "kind": "early", "note": "Q2 grading and reporting half-day for teachers."}, {"start": "2027-02-15", "end": "2027-02-15", "title": "Presidents’ Day", "kind": "closed", "note": "Schools and offices closed."}, {"start": "2027-02-26", "end": "2027-02-26", "title": "Early dismissal", "kind": "early", "note": "Teacher professional half-day. Dismissal time is not specified in this calendar."}, {"start": "2027-03-10", "end": "2027-03-10", "title": "Professional development · Eid al-Fitr", "kind": "closed", "note": "Schools closed for students. Religious observance."}, {"start": "2027-03-26", "end": "2027-03-26", "title": "Good Friday", "kind": "closed", "note": "Schools and offices closed."}, {"start": "2027-03-29", "end": "2027-03-29", "title": "Monday after Easter", "kind": "closed", "note": "Schools and offices closed."}, {"start": "2027-03-30", "end": "2027-04-02", "title": "Spring break", "kind": "break", "note": "Schools closed. March 26 and March 29 are also closure dates."}, {"start": "2027-04-09", "end": "2027-04-09", "title": "End of third quarter", "kind": "academic", "note": "47 student days."}, {"start": "2027-04-09", "end": "2027-04-09", "title": "Early dismissal", "kind": "early", "note": "Q3 grading and reporting half-day for teachers."}, {"start": "2027-04-19", "end": "2027-04-19", "title": "Professional development / possible make-up day", "kind": "makeup", "note": "Schools closed for students unless needed as an inclement weather make-up day."}, {"start": "2027-05-07", "end": "2027-05-07", "title": "Last day for high school seniors", "kind": "academic", "note": "High school seniors only."}, {"start": "2027-05-17", "end": "2027-05-17", "title": "Eid al-Adha", "kind": "closed", "note": "Schools and offices closed. Religious observance."}, {"start": "2027-05-21", "end": "2027-05-21", "title": "Early dismissal", "kind": "early", "note": "Teacher professional half-day. Dismissal time is not specified in this calendar."}, {"start": "2027-05-31", "end": "2027-05-31", "title": "Memorial Day", "kind": "closed", "note": "Schools and offices closed."}, {"start": "2027-06-15", "end": "2027-06-15", "title": "Last day for students · End of fourth quarter", "kind": "early", "note": "Early dismissal; 44 student days in Q4. Last student day is subject to change due to emergency closures."}, {"start": "2027-06-16", "end": "2027-06-17", "title": "Possible inclement weather make-up days", "kind": "makeup", "note": "Only if instructional days are needed to extend the school year."}, {"start": "2027-06-16", "end": "2027-06-16", "title": "Last day for teachers", "kind": "staff", "note": "Subject to change due to emergency closures."}, {"start": "2027-06-18", "end": "2027-06-18", "title": "Juneteenth observed", "kind": "closed", "note": "Schools and offices closed."}];
+const eventKinds={closed:['No school','#36ad9e'],break:['Break','#459de0'],early:['Early dismissal','#e6a53c'],holiday:['Observance','#b48ce8'],academic:['Academic','#8799b4'],staff:['Staff','#b89d79'],makeup:['Possible make-up','#e77e77']};
+const calDate=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const dateKey=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+const endAfter=e=>{const d=calDate(e.end);d.setDate(d.getDate()+1);return d};
+const fmtDate=d=>d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+const eventRange=e=>fmtDate(calDate(e.start))+(e.end!==e.start?' – '+fmtDate(calDate(e.end)):'');
+const eventsOn=key=>schoolEvents.filter(e=>e.start<=key&&e.end>=key);
+const countdown=ms=>{const sec=Math.max(0,Math.floor(ms/1000));return Math.floor(sec/86400)+'d '+String(Math.floor(sec%86400/3600)).padStart(2,'0')+'h '+String(Math.floor(sec%3600/60)).padStart(2,'0')+'m '+String(sec%60).padStart(2,'0')+'s'};
+let calendarNow=new Date(Date.now()+offset),monthIndex=Math.max(0,Math.min(11,(calendarNow.getFullYear()-2026)*12+calendarNow.getMonth()-6)),selectedKey=dateKey(calendarNow),lastCalendarDay='';
+const monthSelect=document.querySelector('#calendar-month');
+for(let i=0;i<12;i++){const option=document.createElement('option');option.value=i;option.textContent=new Date(2026,6+i,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});monthSelect.appendChild(option)}
+document.querySelector('#calendar-legend').innerHTML=Object.entries(eventKinds).map(([k,[label,color]])=>'<span><i class="event-dot" style="--event-color:'+color+'"></i>'+label+'</span>').join('');
+function showSelected(){
+ const list=eventsOn(selectedKey);
+ document.querySelector('#selected-date').innerHTML='<h3>'+calDate(selectedKey).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'})+'</h3>'+(list.length?list.map(e=>'<p><strong>'+e.title+'</strong> <span class="event-kind">'+eventKinds[e.kind][0]+'</span></p><p>'+e.note+'</p>').join(''):'<p>No special event listed in the district calendar.</p>');
+}
+function renderCalendar(){
+ monthSelect.value=monthIndex;
+ const first=new Date(2026,6+monthIndex,1),last=new Date(first.getFullYear(),first.getMonth()+1,0),today=dateKey(new Date(Date.now()+offset)),grid=document.querySelector('#calendar-grid');
+ grid.replaceChildren();
+ for(const name of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']){const el=document.createElement('div');el.className='weekday';el.textContent=name;grid.appendChild(el)}
+ for(let i=0;i<first.getDay();i++){const blank=document.createElement('div');blank.setAttribute('aria-hidden','true');grid.appendChild(blank)}
+ for(let day=1;day<=last.getDate();day++){
+  const d=new Date(first.getFullYear(),first.getMonth(),day),key=dateKey(d),list=eventsOn(key),button=document.createElement('button');
+  button.className='calendar-day'+(list.length?' has-event':'')+(key===today?' today':'')+(key===selectedKey?' selected':'');button.setAttribute('aria-pressed',String(key===selectedKey));
+  if(key===today)button.setAttribute('aria-current','date');
+  button.setAttribute('aria-label',fmtDate(d)+(list.length?': '+list.map(e=>e.title).join('; '):': No special event listed'));
+  button.innerHTML='<span>'+day+'</span><span class="event-dots">'+[...new Set(list.map(e=>e.kind))].map(k=>'<i class="event-dot" style="--event-color:'+eventKinds[k][1]+'"></i>').join('')+'</span>';
+  button.addEventListener('click',()=>{selectedKey=key;renderCalendar()});grid.appendChild(button);
+ }
+ document.querySelector('#calendar-prev').disabled=monthIndex===0;document.querySelector('#calendar-next').disabled=monthIndex===11;
+ const monthEvents=schoolEvents.filter(e=>e.start<=dateKey(last)&&e.end>=dateKey(first));
+ document.querySelector('#month-agenda').innerHTML='<h3>Events this month</h3>'+(monthEvents.length?monthEvents.map(e=>'<article class="agenda-event" style="--event-color:'+eventKinds[e.kind][1]+'"><time>'+eventRange(e)+'</time><strong>'+e.title+'</strong><span class="event-kind">'+eventKinds[e.kind][0]+'</span><p>'+e.note+'</p></article>').join(''):'<p>No special events listed.</p>');showSelected();
+}
+function tickCalendar(){
+ const now=new Date(Date.now()+offset),today=dateKey(now);
+ if(lastCalendarDay!==today){lastCalendarDay=today;renderCalendar()}
+ const future=schoolEvents.filter(e=>calDate(e.start)>now).sort((a,b)=>a.start.localeCompare(b.start));
+ const next=future[0],sameDay=next?future.filter(e=>e.start===next.start):[];
+ document.querySelector('#special-countdown').textContent=next?countdown(calDate(next.start)-now):'No more dates listed';
+ document.querySelector('#special-name').textContent=sameDay.map(e=>e.title).join(' · ');
+ document.querySelector('#special-date').textContent=next?fmtDate(calDate(next.start)):'';
+ const activeBreak=schoolEvents.find(e=>e.kind==='break'&&calDate(e.start)<=now&&endAfter(e)>now),nextBreak=activeBreak||future.find(e=>e.kind==='break');
+ document.querySelector('#break-heading').textContent=activeBreak?'Break ends in':'Next break';
+ document.querySelector('#break-countdown').textContent=nextBreak?countdown((activeBreak?endAfter(nextBreak):calDate(nextBreak.start))-now):'No more breaks listed';
+ document.querySelector('#break-name').textContent=nextBreak?nextBreak.title:'';
+ document.querySelector('#break-date').textContent=nextBreak?eventRange(nextBreak):'';
+ const active=eventsOn(today);document.querySelector('#current-events').textContent=active.length?'Happening today: '+active.map(e=>e.title).join(' · '):'No special events listed for today.';
+}
+monthSelect.addEventListener('change',()=>{monthIndex=Number(monthSelect.value);selectedKey=dateKey(new Date(2026,6+monthIndex,1));renderCalendar()});
+document.querySelector('#calendar-prev').addEventListener('click',()=>{monthIndex=Math.max(0,monthIndex-1);selectedKey=dateKey(new Date(2026,6+monthIndex,1));renderCalendar()});
+document.querySelector('#calendar-next').addEventListener('click',()=>{monthIndex=Math.min(11,monthIndex+1);selectedKey=dateKey(new Date(2026,6+monthIndex,1));renderCalendar()});
+document.querySelector('#calendar-today').addEventListener('click',()=>{const d=new Date(Date.now()+offset);monthIndex=Math.max(0,Math.min(11,(d.getFullYear()-2026)*12+d.getMonth()-6));selectedKey=dateKey(d);renderCalendar()});
+tickCalendar();setInterval(tickCalendar,1000);
+
 })();
 </script>
 </body>
