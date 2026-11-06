@@ -59,6 +59,12 @@ canvas{display:block;width:100%;height:auto;margin:auto}#red-clock{border-radius
 .calendar-notes{font-size:.78rem;color:#5e6774;line-height:1.6;border-top:1px solid #dce1eb;padding-top:14px;margin-top:20px}.calendar-notes p{font-size:inherit;text-align:left;margin:5px 0}
 @media(max-width:480px){.countdown-grid{grid-template-columns:1fr}.calendar-day{min-height:54px}.calendar-grid{gap:3px}.calendar-nav button{padding:8px 10px}.countdown-card{padding:14px}}
 @media(prefers-color-scheme:dark){.year-calendar,.calendar-day,.selected-date,.calendar-notes{border-color:#3a4658}.countdown-card{background:#172d40;border-color:#345069}.countdown-card h3{color:#9fc8e8}.calendar-day.selected{background:#204b6c}.agenda-event{background:#222e40}.calendar-legend,.weekday,#current-events,.calendar-notes,.countdown-card small,.agenda-event time,.event-kind{color:#bac3d0}.calendar-toolbar select{background:#1a2230}}
+
+.countdown-card{padding:16px}.countdown-card h3{font-size:.72rem;margin-bottom:9px}.countdown-card .event-name{font-size:1.07rem;line-height:1.35}.countdown-card strong{font-size:1.18rem;margin:12px 0 0}.countdown-card small{font-size:.8rem}
+.calendar-intro{margin:4px 0 16px}.calendar-day{min-height:49px;gap:4px;padding:5px}.calendar-toolbar{margin-top:14px}.calendar-grid{gap:4px}
+.calendar-extra{margin:18px 0 0;border-top:1px solid #dce1eb;padding-top:12px}.calendar-extra summary,.calendar-notes summary{cursor:pointer;font-size:.85rem;font-weight:600}.calendar-notes{padding-top:12px;margin-top:14px}.calendar-notes p:first-of-type{margin-top:12px}
+.agenda-event{padding:8px 10px;margin:8px 0}.agenda-event time{margin-bottom:4px}.event-kind{display:block;margin:4px 0 0;font-size:.65rem}.calendar-legend[hidden],.selected-date[hidden]{display:none}.selected-date{margin:12px 0;padding:12px}
+@media(prefers-color-scheme:dark){.calendar-extra{border-color:#3a4658}}
 </style>
 </head>
 <body>
@@ -94,19 +100,18 @@ canvas{display:block;width:100%;height:auto;margin:auto}#red-clock{border-radius
 </section>
 
 <section class="year-calendar" aria-labelledby="calendar-heading">
-<h2 id="calendar-heading">2026–2027 School Calendar</h2>
-<p class="calendar-intro">Prince George’s County Public Schools · July 2026–June 2027</p>
+<h2 id="calendar-heading">School Calendar</h2><p class="calendar-intro">2026–2027</p>
 <div class="countdown-grid">
-<div class="countdown-card"><h3>Next special day</h3><strong id="special-countdown">Loading…</strong><span class="event-name" id="special-name"></span><small id="special-date"></small></div>
-<div class="countdown-card"><h3 id="break-heading">Next break</h3><strong id="break-countdown">Loading…</strong><span class="event-name" id="break-name"></span><small id="break-date"></small></div>
+<div class="countdown-card"><h3>Next special day</h3><span class="event-name" id="special-name"></span><small id="special-date"></small><strong id="special-countdown">Loading…</strong></div>
+<div class="countdown-card"><h3 id="break-heading">Next break</h3><span class="event-name" id="break-name"></span><small id="break-date"></small><strong id="break-countdown">Loading…</strong></div>
 </div>
 <div id="current-events"></div>
 <div class="calendar-toolbar"><label for="calendar-month">Month <select id="calendar-month" aria-label="Month"></select></label><div class="calendar-nav"><button id="calendar-prev" aria-label="Previous month">←</button><button id="calendar-today">Today</button><button id="calendar-next" aria-label="Next month">→</button></div></div>
 <div class="calendar-grid" id="calendar-grid" aria-label="Month calendar"></div>
-<div class="calendar-legend" id="calendar-legend"></div>
-<div class="selected-date" id="selected-date" aria-live="polite"></div>
-<div class="month-agenda" id="month-agenda"></div>
-<div class="calendar-notes"><p>Countdowns use CPA time and count to midnight at the start of the listed date. Breaks mean the named Thanksgiving, winter/Christmas, and spring breaks.</p><p>Religious observances do not imply a school closure unless marked closed; some begin at sunset the previous day. Early-dismissal times are not provided in this calendar.</p><p>Possible weather make-up days: April 19, June 16, and June 17, 2027. Last student and teacher days may change. A/B days continue alternating every calendar day, as configured.</p><p>Source: district school calendar, approved January 22, 2026; updated July 16, 2026.</p></div>
+<div class="calendar-legend" id="calendar-legend" hidden></div>
+<div class="selected-date" id="selected-date" aria-live="polite" hidden></div>
+<details class="calendar-extra"><summary>Events this month</summary><div class="month-agenda" id="month-agenda"></div></details>
+<details class="calendar-notes"><summary>Calendar notes</summary><p>Countdowns use CPA time and count to midnight at the start of the listed date. Breaks mean the named Thanksgiving, winter/Christmas, and spring breaks.</p><p>Religious observances do not imply a school closure unless marked closed; some begin at sunset the previous day. Early-dismissal times are not provided in this calendar.</p><p>Possible weather make-up days: April 19, June 16, and June 17, 2027. Last student and teacher days may change. A/B days continue alternating every calendar day, as configured.</p><p>Source: district school calendar, approved January 22, 2026; updated July 16, 2026.</p></details>
 </section>
 </main>
 <script>
@@ -180,15 +185,16 @@ const eventKinds={closed:['No school','#36ad9e'],break:['Break','#459de0'],early
 const calDate=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
 const dateKey=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
 const endAfter=e=>{const d=calDate(e.end);d.setDate(d.getDate()+1);return d};
-const fmtDate=d=>d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+const fmtDate=d=>d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
 const eventRange=e=>fmtDate(calDate(e.start))+(e.end!==e.start?' – '+fmtDate(calDate(e.end)):'');
 const eventsOn=key=>schoolEvents.filter(e=>e.start<=key&&e.end>=key);
-const countdown=ms=>{const sec=Math.max(0,Math.floor(ms/1000));return Math.floor(sec/86400)+'d '+String(Math.floor(sec%86400/3600)).padStart(2,'0')+'h '+String(Math.floor(sec%3600/60)).padStart(2,'0')+'m '+String(sec%60).padStart(2,'0')+'s'};
-let calendarNow=new Date(Date.now()+offset),monthIndex=Math.max(0,Math.min(11,(calendarNow.getFullYear()-2026)*12+calendarNow.getMonth()-6)),selectedKey=dateKey(calendarNow),lastCalendarDay='';
+const countdown=ms=>{const sec=Math.max(0,Math.floor(ms/1000));return Math.floor(sec/86400)+'d '+String(Math.floor(sec%86400/3600)).padStart(2,'0')+'h '+String(Math.floor(sec%3600/60)).padStart(2,'0')+'m'};
+let calendarNow=new Date(Date.now()+offset),monthIndex=Math.max(0,Math.min(11,(calendarNow.getFullYear()-2026)*12+calendarNow.getMonth()-6)),selectedKey='',lastCalendarDay='';
 const monthSelect=document.querySelector('#calendar-month');
 for(let i=0;i<12;i++){const option=document.createElement('option');option.value=i;option.textContent=new Date(2026,6+i,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});monthSelect.appendChild(option)}
 document.querySelector('#calendar-legend').innerHTML=Object.entries(eventKinds).map(([k,[label,color]])=>'<span><i class="event-dot" style="--event-color:'+color+'"></i>'+label+'</span>').join('');
 function showSelected(){
+ const panel=document.querySelector('#selected-date');panel.hidden=!selectedKey;if(!selectedKey)return;
  const list=eventsOn(selectedKey);
  document.querySelector('#selected-date').innerHTML='<h3>'+calDate(selectedKey).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'})+'</h3>'+(list.length?list.map(e=>'<p><strong>'+e.title+'</strong> <span class="event-kind">'+eventKinds[e.kind][0]+'</span></p><p>'+e.note+'</p>').join(''):'<p>No special event listed in the district calendar.</p>');
 }
@@ -208,26 +214,26 @@ function renderCalendar(){
  }
  document.querySelector('#calendar-prev').disabled=monthIndex===0;document.querySelector('#calendar-next').disabled=monthIndex===11;
  const monthEvents=schoolEvents.filter(e=>e.start<=dateKey(last)&&e.end>=dateKey(first));
- document.querySelector('#month-agenda').innerHTML='<h3>Events this month</h3>'+(monthEvents.length?monthEvents.map(e=>'<article class="agenda-event" style="--event-color:'+eventKinds[e.kind][1]+'"><time>'+eventRange(e)+'</time><strong>'+e.title+'</strong><span class="event-kind">'+eventKinds[e.kind][0]+'</span><p>'+e.note+'</p></article>').join(''):'<p>No special events listed.</p>');showSelected();
+ document.querySelector('#month-agenda').innerHTML=''+(monthEvents.length?monthEvents.map(e=>'<article class="agenda-event" style="--event-color:'+eventKinds[e.kind][1]+'"><time>'+eventRange(e)+'</time><strong>'+e.title+'</strong><span class="event-kind">'+eventKinds[e.kind][0]+'</span></article>').join(''):'<p>No special events listed.</p>');showSelected();
 }
 function tickCalendar(){
  const now=new Date(Date.now()+offset),today=dateKey(now);
  if(lastCalendarDay!==today){lastCalendarDay=today;renderCalendar()}
  const future=schoolEvents.filter(e=>calDate(e.start)>now).sort((a,b)=>a.start.localeCompare(b.start));
  const next=future[0],sameDay=next?future.filter(e=>e.start===next.start):[];
- document.querySelector('#special-countdown').textContent=next?countdown(calDate(next.start)-now):'No more dates listed';
+ document.querySelector('#special-countdown').textContent=next?'In '+countdown(calDate(next.start)-now):'No more dates listed';
  document.querySelector('#special-name').textContent=sameDay.map(e=>e.title).join(' · ');
  document.querySelector('#special-date').textContent=next?fmtDate(calDate(next.start)):'';
  const activeBreak=schoolEvents.find(e=>e.kind==='break'&&calDate(e.start)<=now&&endAfter(e)>now),nextBreak=activeBreak||future.find(e=>e.kind==='break');
- document.querySelector('#break-heading').textContent=activeBreak?'Break ends in':'Next break';
- document.querySelector('#break-countdown').textContent=nextBreak?countdown((activeBreak?endAfter(nextBreak):calDate(nextBreak.start))-now):'No more breaks listed';
+ document.querySelector('#break-heading').textContent=activeBreak?'Current break':'Next break';
+ document.querySelector('#break-countdown').textContent=nextBreak?(activeBreak?'Ends in ':'In ')+countdown((activeBreak?endAfter(nextBreak):calDate(nextBreak.start))-now):'No more breaks listed';
  document.querySelector('#break-name').textContent=nextBreak?nextBreak.title:'';
  document.querySelector('#break-date').textContent=nextBreak?eventRange(nextBreak):'';
- const active=eventsOn(today);document.querySelector('#current-events').textContent=active.length?'Happening today: '+active.map(e=>e.title).join(' · '):'No special events listed for today.';
+ const active=eventsOn(today);document.querySelector('#current-events').textContent=active.length?'Today: '+active.map(e=>e.title).join(' · '):'';
 }
-monthSelect.addEventListener('change',()=>{monthIndex=Number(monthSelect.value);selectedKey=dateKey(new Date(2026,6+monthIndex,1));renderCalendar()});
-document.querySelector('#calendar-prev').addEventListener('click',()=>{monthIndex=Math.max(0,monthIndex-1);selectedKey=dateKey(new Date(2026,6+monthIndex,1));renderCalendar()});
-document.querySelector('#calendar-next').addEventListener('click',()=>{monthIndex=Math.min(11,monthIndex+1);selectedKey=dateKey(new Date(2026,6+monthIndex,1));renderCalendar()});
+monthSelect.addEventListener('change',()=>{monthIndex=Number(monthSelect.value);selectedKey='';renderCalendar()});
+document.querySelector('#calendar-prev').addEventListener('click',()=>{monthIndex=Math.max(0,monthIndex-1);selectedKey='';renderCalendar()});
+document.querySelector('#calendar-next').addEventListener('click',()=>{monthIndex=Math.min(11,monthIndex+1);selectedKey='';renderCalendar()});
 document.querySelector('#calendar-today').addEventListener('click',()=>{const d=new Date(Date.now()+offset);monthIndex=Math.max(0,Math.min(11,(d.getFullYear()-2026)*12+d.getMonth()-6));selectedKey=dateKey(d);renderCalendar()});
 tickCalendar();setInterval(tickCalendar,1000);
 
