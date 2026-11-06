@@ -21,6 +21,19 @@ button{font:inherit;border:1px solid #c4cddd;border-radius:11px;background:white
 #offset-label{text-align:center;font-weight:600;margin-top:16px}
 @media(max-width:400px){main{padding:12px}.clocks{gap:8px}.panel{padding:12px 4px}.face{border-width:4px}}
 @media(prefers-color-scheme:dark){body{background:#10151e;color:#eaf0f8}main,.panel,button{background:#1a2230;color:#eaf0f8;border-color:#3a4658}.face{background:#1a2230;color:#eaf0f8;border-color:#eaf0f8}.hour,.minute{background:#eaf0f8}p{color:#bac3d0}button:hover{background:#29364a}}
+
+body{padding:24px 0}
+.school-schedule{margin-top:24px;border-top:1px solid #dce1eb;padding-top:22px}
+.school-schedule h2{font-size:1.2rem;text-align:center;margin:0 0 16px}
+.day-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.day-card{border:1px solid #dce1eb;background:#f4f6fa;border-radius:14px;padding:14px;text-align:center}
+.day-card strong{display:block;font-size:1.3rem;margin:5px 0}.day-card small{color:#5e6774}
+.schedule-table{width:100%;border-collapse:collapse;text-align:left;font-size:.95rem}
+.schedule-table th{font-size:.8rem;color:#5e6774;text-transform:uppercase;letter-spacing:.05em}
+.schedule-table th,.schedule-table td{padding:11px 10px;border-bottom:1px solid #e7ebf2}
+.schedule-table td:first-child{white-space:nowrap;font-weight:650;font-variant-numeric:tabular-nums;width:100px}
+.schedule-table tr:last-child td{border-bottom:0}
+@media(prefers-color-scheme:dark){.school-schedule,.day-card{border-color:#3a4658}.day-card{background:#222e40}.day-card small,.schedule-table th{color:#bac3d0}.schedule-table th,.schedule-table td{border-bottom-color:#3a4658}}
 </style>
 </head>
 <body>
@@ -34,6 +47,26 @@ button{font:inherit;border:1px solid #c4cddd;border-radius:11px;background:white
 <div id="offset-label" aria-live="polite">CPA time is 27.5 seconds ahead</div>
 <div class="controls"><button id="minus">−0.5s</button><button id="reset">Reset to 26s</button><button id="plus">+0.5s</button></div>
 <p>Runs offline once downloaded. Clock accuracy depends on your device’s time settings.</p>
+
+<section class="school-schedule" aria-labelledby="schedule-heading">
+<h2 id="schedule-heading">School Schedule</h2>
+<div class="day-grid">
+<div class="day-card"><span>Today</span><strong id="today-day">A day</strong><small id="today-date"></small></div>
+<div class="day-card"><span>Tomorrow</span><strong id="tomorrow-day">B day</strong><small id="tomorrow-date"></small></div>
+</div>
+<table class="schedule-table"><thead><tr><th scope="col">Time</th><th scope="col">Event</th></tr></thead><tbody>
+<tr><td>7:50 AM</td><td>Doors open</td></tr>
+<tr><td>8:10 AM</td><td>Classes begin</td></tr>
+<tr><td>9:44 AM</td><td>Period 1 ends</td></tr>
+<tr><td>11:15 AM</td><td>Period 2 ends</td></tr>
+<tr><td>11:50 AM</td><td>First lunch begins</td></tr>
+<tr><td>12:20 PM</td><td>First lunch ends</td></tr>
+<tr><td>12:24 PM</td><td>Second lunch begins</td></tr>
+<tr><td>12:55 PM</td><td>Second lunch ends</td></tr>
+<tr><td>1:19 PM</td><td>Period 3 ends</td></tr>
+<tr><td>2:50 PM</td><td>Period 4 ends · End of school day</td></tr>
+</tbody></table>
+</section>
 </main>
 <script>
 (()=>{
@@ -61,6 +94,17 @@ function adjust(ms){offset+=ms;document.querySelector('#offset-label').textConte
 document.querySelector('#minus').addEventListener('click',()=>adjust(-500));
 document.querySelector('#plus').addEventListener('click',()=>adjust(500));
 document.querySelector('#reset').addEventListener('click',()=>adjust(26000-offset));
+
+function updateSchoolDays(){
+ const today=new Date(),tomorrow=new Date(today.getFullYear(),today.getMonth(),today.getDate()+1);
+ const anchor=Date.UTC(2026,10,6);
+ for(const [prefix,date] of [['today',today],['tomorrow',tomorrow]]){
+  const days=Math.round((Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())-anchor)/86400000);
+  document.querySelector('#'+prefix+'-day').textContent=((days%2+2)%2===0?'A':'B')+' day';
+  document.querySelector('#'+prefix+'-date').textContent=date.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+ }
+}
+updateSchoolDays();setInterval(updateSchoolDays,1000);
 update();setInterval(update,50);
 })();
 </script>
