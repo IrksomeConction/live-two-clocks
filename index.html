@@ -28,10 +28,10 @@ button{font:inherit;border:1px solid #c4cddd;border-radius:11px;background:white
 <h1>Live Two Clocks</h1>
 <p>Both clocks use your device’s current local time.</p>
 <div class="clocks">
-<section class="panel"><div class="label">Clock 1 · Live</div><div class="face" id="face-a"></div><div class="digital" id="time-a">--:--:--</div></section>
-<section class="panel"><div class="label">Clock 2 · Adjusted</div><div class="face" id="face-b"></div><div class="digital" id="time-b">--:--:--</div></section>
+<section class="panel"><div class="label">Your Time</div><div class="face" id="face-a"></div><div class="digital" id="time-a">--:--:--</div></section>
+<section class="panel"><div class="label">CPA time</div><div class="face" id="face-b"></div><div class="digital" id="time-b">--:--:--</div></section>
 </div>
-<div id="offset-label" aria-live="polite">Clock 2 is 27.5 seconds ahead</div>
+<div id="offset-label" aria-live="polite">CPA time is 27.5 seconds ahead</div>
 <div class="controls"><button id="minus">−0.5s</button><button id="reset">Reset to 26s</button><button id="plus">+0.5s</button></div>
 <p>Runs offline once downloaded. Clock accuracy depends on your device’s time settings.</p>
 </main>
@@ -57,7 +57,7 @@ function update(){
   displays[i].textContent=`${h%12||12}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
  });
 }
-function adjust(ms){offset+=ms;document.querySelector('#offset-label').textContent=`Clock 2 is ${(offset/1000).toFixed(1)} seconds ${offset>=0?'ahead':'behind'}`;update()}
+function adjust(ms){offset+=ms;document.querySelector('#offset-label').textContent=`CPA time is ${(offset/1000).toFixed(1)} seconds ${offset>=0?'ahead':'behind'}`;update()}
 document.querySelector('#minus').addEventListener('click',()=>adjust(-500));
 document.querySelector('#plus').addEventListener('click',()=>adjust(500));
 document.querySelector('#reset').addEventListener('click',()=>adjust(26000-offset));
